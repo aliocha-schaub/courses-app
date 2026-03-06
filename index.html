@@ -111,16 +111,40 @@ html, body {
 .add-btn:hover { background: #86efac; }
 .add-btn:active { transform: scale(.92); }
 
-.cat-pills { display: flex; gap: 5px; margin-top: 10px; flex-wrap: wrap; }
-.cat-pill {
-  padding: 4px 10px; border-radius: 20px;
-  border: 1.5px solid var(--border);
-  font-size: 11px; font-weight: 600; cursor: pointer;
-  background: transparent; color: var(--text-muted);
-  transition: all .14s; font-family: var(--font-body);
-  letter-spacing: .2px;
+/* category picker */
+.cat-picker-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.7); z-index: 100;
+  align-items: flex-end; justify-content: center;
 }
-.cat-pill.on { color: #0A0A0A; border-color: transparent; }
+.cat-picker-overlay.open { display: flex; }
+.cat-picker-sheet {
+  background: #1a1a1a; border-radius: 18px 18px 0 0;
+  padding: 12px 0 32px; width: 100%; max-height: 70vh;
+  overflow-y: auto;
+}
+.cat-picker-handle {
+  width: 36px; height: 4px; background: #333; border-radius: 2px;
+  margin: 0 auto 14px;
+}
+.cat-picker-title {
+  font-size: 11px; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--text-muted);
+  padding: 0 20px 10px;
+}
+.cat-picker-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 20px; cursor: pointer;
+  transition: background .1s; border: none;
+  background: transparent; width: 100%; text-align: left;
+  font-family: var(--font-body);
+}
+.cat-picker-item:hover { background: #222; }
+.cat-picker-item:active { background: #252525; }
+.cat-picker-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.cat-picker-label { font-size: 15px; font-weight: 500; color: var(--text); }
+
+/* cat-pills removed */
 
 /* ── QUICK PANEL ── */
 .quick-toggle {
@@ -256,9 +280,22 @@ html, body {
   <div class="form-wrap">
     <div class="form-row">
       <input class="txt-input" id="item-input" placeholder="Ajouter un article…" autocomplete="off">
-      <button class="add-btn" onclick="addItem()">+</button>
+      <button class="add-btn" id="add-btn" onclick="handleAdd()">+</button>
     </div>
-    <div class="cat-pills" id="cat-pills"></div>
+    <div id="selected-cat-row" style="display:none; margin-top:8px; display:flex; align-items:center; gap:6px; cursor:pointer;" onclick="openCatPicker()">
+      <span id="selected-cat-dot" style="width:8px;height:8px;border-radius:50%;background:#666;flex-shrink:0;display:inline-block"></span>
+      <span id="selected-cat-label" style="font-size:12px;font-weight:600;color:var(--text-muted);letter-spacing:.3px"></span>
+      <span style="font-size:11px;color:#444;margin-left:2px">▾</span>
+    </div>
+  </div>
+
+  <!-- CATEGORY PICKER SHEET -->
+  <div class="cat-picker-overlay" id="cat-picker-overlay" onclick="closeCatPicker(event)">
+    <div class="cat-picker-sheet">
+      <div class="cat-picker-handle"></div>
+      <div class="cat-picker-title">Choisir une catégorie</div>
+      <div id="cat-picker-list"></div>
+    </div>
   </div>
 
   <!-- QUICK ADD TOGGLE -->
@@ -499,7 +536,20 @@ function toggleEditFavs() {
 
 function selectCat(id) {
   selCat = id;
+  document.getElementById("cat-picker-overlay").classList.remove("open");
   renderCatPills();
+
+  // If triggered from add flow, complete the add
+  const input = document.getElementById("item-input");
+  const pending = input.dataset.pending;
+  if (pending) {
+    delete input.dataset.pending;
+    input.value = "";
+    items.push({ id: uid(), name: pending, category: selCat, checked: false, addedAt: new Date().toISOString() });
+    render();
+    pushList();
+    input.focus();
+  }
 }
 
 // ─── RENDER ───────────────────────────────────────────────────────────────────
@@ -508,6 +558,9 @@ function render() {
   renderList();
   renderQuick();
   renderCounts();
+  // Show category selector row
+  const row = document.getElementById("selected-cat-row");
+  if (row) row.style.display = "flex";
 }
 
 function renderCounts() {
@@ -531,12 +584,46 @@ function renderCounts() {
 }
 
 function renderCatPills() {
-  const el = document.getElementById("cat-pills");
-  el.innerHTML = CATEGORIES.map(c => `
-    <button class="cat-pill ${selCat === c.id ? "on" : ""}"
-      style="${selCat === c.id ? `background:${c.color};border-color:${c.color}` : `border-color:${c.color}88`}"
-      onclick="selectCat('${c.id}')">${c.emoji} ${c.label}</button>
-  `).join("");
+  // Update selected category row
+  const cat = getCat(selCat);
+  const dot = document.getElementById("selected-cat-dot");
+  const lbl = document.getElementById("selected-cat-label");
+  if (dot) dot.style.background = cat.color;
+  if (lbl) lbl.textContent = cat.emoji + " " + cat.label;
+
+  // Build picker list
+  const list = document.getElementById("cat-picker-list");
+  if (list) {
+    list.innerHTML = CATEGORIES.map(c => `
+      <button class="cat-picker-item" onclick="selectCat('${c.id}')">
+        <span class="cat-picker-dot" style="background:${c.color}"></span>
+        <span class="cat-picker-label">${c.emoji} ${c.label}</span>
+        ${selCat === c.id ? '<span style="margin-left:auto;color:var(--accent);font-size:14px">✓</span>' : ''}
+      </button>
+    `).join("");
+  }
+}
+
+function openCatPicker() {
+  document.getElementById("cat-picker-overlay").classList.add("open");
+  renderCatPills();
+}
+
+function closeCatPicker(e) {
+  if (e.target === document.getElementById("cat-picker-overlay")) {
+    document.getElementById("cat-picker-overlay").classList.remove("open");
+  }
+}
+
+function handleAdd() {
+  const input = document.getElementById("item-input");
+  const name = input.value.trim();
+  if (!name) return;
+  // Show category picker first
+  renderCatPills();
+  document.getElementById("cat-picker-overlay").classList.add("open");
+  // Store pending name
+  input.dataset.pending = name;
 }
 
 function renderList() {
@@ -615,7 +702,7 @@ function renderQuickChips() {
 
 // ─── KEYBOARD ─────────────────────────────────────────────────────────────────
 document.getElementById("item-input").addEventListener("keydown", e => {
-  if (e.key === "Enter") addItem();
+  if (e.key === "Enter") handleAdd();
 });
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────

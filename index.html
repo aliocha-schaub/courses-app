@@ -358,43 +358,64 @@ let pollTimer = null;
 function uid() { return Math.random().toString(36).slice(2) + Date.now().toString(36); }
 function getCat(id) { return CATEGORIES.find(c => c.id === id) || CATEGORIES.at(-1); }
 
-// ─── CONFIG — colle ton URL Apps Script ici ──────────────────────────────────
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw5p572zN0O5rGzXglDz9-gIkNUeJ6ClAvSxCsafxkWpOZj-xFs-tPbxU56aHkPKz468A/exec";
 
-// ─── API CALLS via fetch ──────────────────────────────────────────────────────
+// ─── API ──────────────────────────────────────────────────────────────────────
+let saving = false;        // true while a save is in flight
+let pendingListSave = null; // latest items snapshot waiting to be saved
+let pendingFavsSave = null;
+
 async function api(action, payload) {
-  const body = JSON.stringify({ action, ...payload });
   const res = await fetch(APPS_SCRIPT_URL, {
-    method: "POST",
-    redirect: "follow",
-    body: body,
+    method: "POST", redirect: "follow",
+    body: JSON.stringify({ action, ...payload }),
   });
   return res.json();
 }
 
-async function loadAll() {
+// Load from server — skipped if a save is in flight to avoid overwriting local state
+async function loadAll(force) {
+  if (saving && !force) return;
   setSyncing(true);
   try {
-    const [r1, r2] = await Promise.all([
-      api("getList", {}),
-      api("getFavs", {}),
-    ]);
-    if (r1 && r1.items) items = r1.items;
-    if (r2 && r2.favs && r2.favs.length) favs = r2.favs;
+    const [r1, r2] = await Promise.all([api("getList",{}), api("getFavs",{})]);
+    // Only update if no save happened while we were fetching
+    if (!saving || force) {
+      if (r1 && r1.items) items = r1.items;
+      if (r2 && r2.favs && r2.favs.length) favs = r2.favs;
+    }
   } catch(e) { console.error(e); }
   setSyncing(false);
   render();
 }
 
+// Save list — batches rapid successive calls, sends only the latest snapshot
 async function pushList() {
+  pendingListSave = JSON.parse(JSON.stringify(items)); // snapshot
+  if (saving) return; // a save loop is already running
+  saving = true;
   setSyncing(true);
-  try { await api("saveList", { items }); } catch(e) { console.error(e); }
+  while (pendingListSave) {
+    const snapshot = pendingListSave;
+    pendingListSave = null;
+    try { await api("saveList", { items: snapshot }); } catch(e) { console.error(e); }
+  }
+  saving = false;
   setSyncing(false);
 }
 
 async function pushFavs() {
+  pendingFavsSave = JSON.parse(JSON.stringify(favs));
+  if (saving) return;
+  saving = true;
   setSyncing(true);
-  try { await api("saveFavs", { favs }); } catch(e) { console.error(e); }
+  while (pendingFavsSave) {
+    const snapshot = pendingFavsSave;
+    pendingFavsSave = null;
+    try { await api("saveFavs", { favs: snapshot }); } catch(e) { console.error(e); }
+  }
+  saving = false;
   setSyncing(false);
 }
 
@@ -599,7 +620,7 @@ document.getElementById("item-input").addEventListener("keydown", e => {
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 loadAll();
-pollTimer = setInterval(loadAll, 10000);
+pollTimer = setInterval(loadAll, 20000);
 
 // Show install prompt if not already in standalone mode
 if (!window.navigator.standalone) {

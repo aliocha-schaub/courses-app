@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Courses">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#141414">
+<title>Notre liste de courses 🛒</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --accent: #4ade80;
+  --accent-dim: rgba(74,222,128,.12);
+  --text: #F0F0F0;
+  --text-muted: #666;
+  --border: #222222;
+  --bg: #0A0A0A;
+  --surface: #141414;
+  --surface2: #1C1C1C;
+  --danger: #f87171;
+  --font-display: 'Bricolage Grotesque', sans-serif;
+  --font-body: 'Plus Jakarta Sans', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  height: 100%; width: 100%;
+  background: var(--bg); font-family: var(--font-body); color: var(--text);
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
+.app {
+  width: 100%; max-width: 600px; margin: 0 auto;
+  min-height: 100vh; min-height: -webkit-fill-available;
+  height: 100%;
+  background: var(--surface); display: flex; flex-direction: column;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+@media (min-width: 601px) {
+  .app { border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
+}
+
+/* ── HEADER ── */
+.hd {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0;
+}
+.hd-top {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px 0;
+}
+.hd-title {
+  font-family: var(--font-display);
+  font-size: 28px; font-weight: 800; letter-spacing: -0.8px;
+  color: var(--text); line-height: 1;
+}
+.hd-title span { color: var(--accent); }
+.hd-sync {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 600; color: var(--text-muted);
+  letter-spacing: .3px;
+}
+.sync-dot { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; flex-shrink: 0; }
+.sync-dot.syncing { background: #f59e0b; animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+.hd-stats {
+  display: flex; align-items: center; gap: 16px;
+  padding: 12px 24px 0;
+}
+.hd-stat { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+.hd-stat strong { color: var(--text); font-weight: 700; }
+
+.progress-wrap { padding: 14px 24px 18px; }
+.progress-bar-bg {
+  height: 2px; background: var(--border); border-radius: 2px; overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%; background: var(--accent); border-radius: 2px;
+  transition: width .4s ease;
+}
+
+/* ── FORM ── */
+.form-wrap { padding: 16px 24px 14px; border-bottom: 1px solid var(--border); background: var(--surface); }
+.form-row { display: flex; gap: 8px; }
+.txt-input {
+  flex: 1; padding: 11px 16px;
+  border: 1.5px solid var(--border); border-radius: 10px;
+  font-family: var(--font-body); font-size: 15px; font-weight: 500;
+  background: var(--surface2); color: var(--text); outline: none;
+  transition: border-color .18s, box-shadow .18s;
+}
+.txt-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(74,222,128,.08); }
+.txt-input::placeholder { color: #444; font-weight: 400; }
+.add-btn {
+  width: 44px; height: 44px; background: var(--accent); color: #0A0A0A;
+  border: none; border-radius: 10px; font-size: 24px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s, transform .1s;
+  flex-shrink: 0;
+}
+.add-btn:hover { background: #86efac; }
+.add-btn:active { transform: scale(.92); }
+
+.cat-pills { display: flex; gap: 5px; margin-top: 10px; flex-wrap: wrap; }
+.cat-pill {
+  padding: 4px 10px; border-radius: 20px;
+  border: 1.5px solid var(--border);
+  font-size: 11px; font-weight: 600; cursor: pointer;
+  background: transparent; color: var(--text-muted);
+  transition: all .14s; font-family: var(--font-body);
+  letter-spacing: .2px;
+}
+.cat-pill.on { color: #0A0A0A; border-color: transparent; }
+
+/* ── QUICK PANEL ── */
+.quick-toggle {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 24px; border-bottom: 1px solid var(--border);
+  cursor: pointer; user-select: none;
+  background: var(--bg);
+  background: #0f0f0f;
+}
+.quick-toggle-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--text-muted);
+}
+.arrow { font-size: 10px; color: var(--text-muted); transition: transform .2s; display: inline-block; }
+.arrow.open { transform: rotate(180deg); }
+.quick-panel { background: #0f0f0f; border-bottom: 1px solid var(--border); max-height: 55vh; overflow-y: auto; display: none; }
+.quick-panel.open { display: block; }
+.quick-inner { padding: 12px 24px 16px; }
+.quick-section { margin-bottom: 12px; }
+.quick-section-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase; margin-bottom: 6px; color: var(--text-muted);
+}
+.quick-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.fav-chip {
+  padding: 4px 11px; border-radius: 20px; border: 1.5px solid;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  background: var(--surface2); transition: all .14s;
+  font-family: var(--font-body);
+}
+.fav-chip.in-list { opacity: .28; cursor: default; }
+.fav-chip:not(.in-list):hover { color: #fff !important; border-color: transparent !important; }
+.fav-chip .fav-del { margin-left: 4px; opacity: .45; display: none; }
+.fav-chip:hover .fav-del { display: inline; }
+
+.edit-row { display: flex; align-items: center; justify-content: flex-end; margin-top: 10px; }
+.edit-btn { font-size: 11px; font-weight: 700; letter-spacing: .4px; color: var(--text-muted); background: none; border: none; cursor: pointer; padding: 3px 6px; border-radius: 6px; font-family: var(--font-body); text-transform: uppercase; }
+.new-fav-form { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+.new-fav-input { flex: 1; min-width: 120px; padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-family: var(--font-body); font-size: 13px; background: var(--surface2); color: var(--text); outline: none; }
+.new-fav-input:focus { border-color: var(--accent); }
+.new-fav-sel { padding: 8px 10px; border: 1.5px solid var(--border); border-radius: 8px; font-family: var(--font-body); font-size: 13px; background: var(--surface2); color: var(--text); cursor: pointer; outline: none; }
+.new-fav-add { padding: 8px 14px; background: var(--accent); color: #0A0A0A; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: var(--font-body); }
+
+/* ── LIST ── */
+.list-area { flex: 1; overflow-y: auto; padding-bottom: 16px; }
+.cat-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 24px 6px;
+  position: sticky; top: 0; background: var(--surface); z-index: 2;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2px;
+}
+.cat-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.cat-header-label {
+  font-size: 10.5px; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--text-muted); flex: 1;
+}
+.cat-count { font-size: 10.5px; font-weight: 700; color: var(--text-muted); }
+
+.item-row {
+  display: flex; align-items: center;
+  padding: 10px 24px; gap: 12px;
+  border-bottom: 1px solid var(--border);
+  transition: background .1s;
+}
+.item-row:last-child { border-bottom: none; }
+.item-row:hover { background: var(--surface2); }
+
+.chk {
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 1.5px solid #333; background: transparent;
+  cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; transition: all .16s;
+}
+.chk.done { border-color: transparent; color: #0A0A0A; }
+.item-name { flex: 1; font-size: 14.5px; font-weight: 500; color: #E8E8E8; line-height: 1.3; }
+.item-name.done { color: #3a3a3a; text-decoration: line-through; font-weight: 400; }
+.del {
+  opacity: 0; width: 24px; height: 24px; border: none; background: transparent;
+  cursor: pointer; color: #444; font-size: 18px; border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  transition: opacity .1s, color .1s;
+}
+.item-row:hover .del { opacity: 1; }
+.del:hover { color: var(--danger); }
+
+.empty { text-align: center; padding: 60px 24px; font-family: var(--font-body); color: #444; font-size: 15px; }
+.empty .e-icon { font-size: 36px; display: block; margin-bottom: 12px; opacity: .5; }
+.loading { text-align: center; padding: 40px; color: #444; font-size: 14px; letter-spacing: .3px; }
+
+/* ── FOOTER ── */
+.ft {
+  padding: 12px 24px; border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--surface);
+}
+.ft-note { font-size: 11px; color: #444; font-weight: 500; letter-spacing: .3px; }
+.clear-btn {
+  font-size: 11.5px; font-weight: 700; color: var(--danger);
+  background: none; border: none; cursor: pointer;
+  padding: 5px 10px; border-radius: 7px;
+  font-family: var(--font-body); letter-spacing: .3px;
+  transition: background .12s;
+}
+.clear-btn:hover { background: rgba(248,113,113,.1); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <header class="hd">
+    <div class="hd-top">
+      <div class="hd-title">Courses<span>.</span></div>
+      <div class="hd-sync">
+        <span class="sync-dot" id="sync-dot"></span>
+        <span id="sync-label">Synchronisé</span>
+      </div>
+    </div>
+    <div class="hd-stats">
+      <span class="hd-stat"><strong id="stat-total">0</strong> article</span>
+      <span class="hd-stat" id="stat-done-wrap" style="display:none"><strong id="stat-done">0</strong> fait</span>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- FORM -->
+  <div class="form-wrap">
+    <div class="form-row">
+      <input class="txt-input" id="item-input" placeholder="Ajouter un article…" autocomplete="off">
+      <button class="add-btn" onclick="addItem()">+</button>
+    </div>
+    <div class="cat-pills" id="cat-pills"></div>
+  </div>
+
+  <!-- QUICK ADD TOGGLE -->
+  <div class="quick-toggle" onclick="toggleQuick()">
+    <span class="quick-toggle-label">⚡ Ajout rapide — favoris</span>
+    <span class="arrow" id="quick-arrow">▼</span>
+  </div>
+
+  <!-- QUICK PANEL -->
+  <div class="quick-panel" id="quick-panel">
+    <div class="quick-inner" id="quick-inner"></div>
+  </div>
+
+  <!-- LIST -->
+  <div class="list-area" id="list-area">
+    <div class="loading">Chargement…</div>
+  </div>
+
+  <!-- INSTALL BANNER (shown only in browser, hidden when standalone) -->
+  <div id="install-banner" style="display:none; padding:10px 16px; background:#1a1a1a; border-bottom:1px solid #222; text-align:center;">
+    <span style="font-size:12px; color:#888;">📲 Ajouter à l'écran d'accueil pour le plein écran</span>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="ft">
+    <span class="ft-note">Synchro auto toutes les 10s</span>
+    <button class="clear-btn" id="clear-btn" onclick="clearChecked()" style="display:none">Effacer les faits</button>
+  </footer>
+
+</div>
+
+<script>
+// ─── DATA ─────────────────────────────────────────────────────────────────────
+const CATEGORIES = [
+  { id: "produce",    label: "Fruits & Légumes",      emoji: "🥦", color: "#4a7c59" },
+  { id: "dairy",      label: "Produits laitiers",     emoji: "🧀", color: "#c2853a" },
+  { id: "meat",       label: "Viandes & Poissons",    emoji: "🥩", color: "#a84d4d" },
+  { id: "bakery",     label: "Boulangerie",           emoji: "🍞", color: "#b5813e" },
+  { id: "pantry",     label: "Épicerie",              emoji: "🥫", color: "#6b7a3e" },
+  { id: "hot_drinks", label: "Boissons chaudes",      emoji: "☕", color: "#7a4f2e" },
+  { id: "soft",       label: "Soft & Boissons",       emoji: "🥤", color: "#3a6b8a" },
+  { id: "frozen",     label: "Surgelés",              emoji: "🧊", color: "#5a7fa8" },
+  { id: "cleaning",   label: "Produits de nettoyage", emoji: "🧹", color: "#5a6e7a" },
+  { id: "hygiene",    label: "Hygiène",               emoji: "🚿", color: "#7a5a8a" },
+  { id: "other",      label: "Autre",                 emoji: "🛒", color: "#7a6b8a" },
+];
+
+const DEFAULT_FAVS = [
+  {name:"Tomates",category:"produce"},{name:"Oignons",category:"produce"},{name:"Ail",category:"produce"},
+  {name:"Salade",category:"produce"},{name:"Carottes",category:"produce"},{name:"Bananes",category:"produce"},
+  {name:"Pommes",category:"produce"},{name:"Pommes de terre",category:"produce"},{name:"Courgettes",category:"produce"},
+  {name:"Poivrons",category:"produce"},{name:"Concombre",category:"produce"},{name:"Champignons",category:"produce"},
+  {name:"Citrons",category:"produce"},{name:"Avocats",category:"produce"},{name:"Oranges / Clémentines",category:"produce"},
+  {name:"Herbes fraîches (persil, basilic…)",category:"produce"},
+  {name:"Lait",category:"dairy"},{name:"Œufs",category:"dairy"},{name:"Beurre",category:"dairy"},
+  {name:"Yaourt",category:"dairy"},{name:"Fromage",category:"dairy"},{name:"Crème fraîche",category:"dairy"},
+  {name:"Mozzarella",category:"dairy"},{name:"Parmesan râpé",category:"dairy"},
+  {name:"Poulet",category:"meat"},{name:"Bœuf haché",category:"meat"},{name:"Steak haché",category:"meat"},
+  {name:"Poisson",category:"meat"},{name:"Saumon",category:"meat"},{name:"Crevettes",category:"meat"},
+  {name:"Boulettes de viande",category:"meat"},{name:"Lardons",category:"meat"},{name:"Jambon",category:"meat"},
+  {name:"Merguez / Saucisses",category:"meat"},
+  {name:"Pain",category:"bakery"},{name:"Pain de mie",category:"bakery"},{name:"Wraps",category:"bakery"},
+  {name:"Croissants / Pains au chocolat",category:"bakery"},{name:"Brioche",category:"bakery"},
+  {name:"Pâte feuilletée / Pâte brisée",category:"bakery"},
+  {name:"Pâtes",category:"pantry"},{name:"Riz",category:"pantry"},{name:"Huile d'olive",category:"pantry"},
+  {name:"Vinaigre",category:"pantry"},{name:"Tomates en boîte",category:"pantry"},{name:"Sauce tomate",category:"pantry"},
+  {name:"Pesto",category:"pantry"},{name:"Céréales",category:"pantry"},{name:"Flocons d'avoine",category:"pantry"},
+  {name:"Sel",category:"pantry"},{name:"Poivre",category:"pantry"},{name:"Épices (cumin, paprika, curry…)",category:"pantry"},
+  {name:"Miel",category:"pantry"},{name:"Confiture",category:"pantry"},{name:"Farine",category:"pantry"},
+  {name:"Sucre",category:"pantry"},{name:"Canderel",category:"pantry"},{name:"Sauce soja",category:"pantry"},
+  {name:"Moutarde",category:"pantry"},{name:"Ketchup",category:"pantry"},
+  {name:"Conserves (maïs, haricots, lentilles…)",category:"pantry"},{name:"Chocolat",category:"pantry"},
+  {name:"Nutella",category:"pantry"},{name:"Biscuits",category:"pantry"},{name:"Barres de céréales",category:"pantry"},{name:"Fruits secs / Noix",category:"pantry"},{name:"Purée de fruits",category:"pantry"},
+  {name:"Café",category:"hot_drinks"},{name:"Thé Vanille & Coco",category:"hot_drinks"},{name:"Tisane",category:"hot_drinks"},
+  {name:"Bière",category:"soft"},{name:"Bière Zéro",category:"soft"},{name:"Soda",category:"soft"},
+  {name:"Coca",category:"soft"},{name:"Coca Zéro",category:"soft"},{name:"Jus",category:"soft"},
+  {name:"Eau gazeuse",category:"soft"},{name:"Sirop",category:"soft"},
+  {name:"Glace",category:"frozen"},{name:"Quiche",category:"frozen"},{name:"Feuilleté",category:"frozen"},
+  {name:"Poêlée de légumes",category:"frozen"},{name:"Frites",category:"frozen"},{name:"Légumes mélangés surgelés",category:"frozen"},
+  {name:"Produit sol",category:"cleaning"},{name:"Éponges carrées",category:"cleaning"},
+  {name:"Éponges plates",category:"cleaning"},{name:"Lessive",category:"cleaning"},
+  {name:"Sacs poubelle",category:"cleaning"},{name:"Papier essuie-tout",category:"cleaning"},
+  {name:"Nettoyant multi-surfaces",category:"cleaning"},
+  {name:"Papier toilette",category:"hygiene"},{name:"Savon / Gel douche",category:"hygiene"},
+  {name:"Shampoing",category:"hygiene"},{name:"Dentifrice",category:"hygiene"},
+  {name:"Déodorant",category:"hygiene"},{name:"Mouchoirs",category:"hygiene"},{name:"Coton-tiges",category:"hygiene"},
+];
+
+let items = [];
+let favs  = [...DEFAULT_FAVS];
+let selCat = "other";
+let quickOpen = false;
+let editFavs  = false;
+let syncing   = false;
+let pollTimer = null;
+
+function uid() { return Math.random().toString(36).slice(2) + Date.now().toString(36); }
+function getCat(id) { return CATEGORIES.find(c => c.id === id) || CATEGORIES.at(-1); }
+
+// ─── CONFIG — colle ton URL Apps Script ici ──────────────────────────────────
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw5p572zN0O5rGzXglDz9-gIkNUeJ6ClAvSxCsafxkWpOZj-xFs-tPbxU56aHkPKz468A/exec";
+
+// ─── API CALLS via fetch ──────────────────────────────────────────────────────
+async function api(action, payload) {
+  const body = JSON.stringify({ action, ...payload });
+  const res = await fetch(APPS_SCRIPT_URL, {
+    method: "POST",
+    redirect: "follow",
+    body: body,
+  });
+  return res.json();
+}
+
+async function loadAll() {
+  setSyncing(true);
+  try {
+    const [r1, r2] = await Promise.all([
+      api("getList", {}),
+      api("getFavs", {}),
+    ]);
+    if (r1 && r1.items) items = r1.items;
+    if (r2 && r2.favs && r2.favs.length) favs = r2.favs;
+  } catch(e) { console.error(e); }
+  setSyncing(false);
+  render();
+}
+
+async function pushList() {
+  setSyncing(true);
+  try { await api("saveList", { items }); } catch(e) { console.error(e); }
+  setSyncing(false);
+}
+
+async function pushFavs() {
+  setSyncing(true);
+  try { await api("saveFavs", { favs }); } catch(e) { console.error(e); }
+  setSyncing(false);
+}
+
+// ─── SYNC STATE ───────────────────────────────────────────────────────────────
+function setSyncing(on) {
+  syncing = on;
+  const dot = document.getElementById("sync-dot");
+  const lbl = document.getElementById("sync-label");
+  dot.className = "sync-dot" + (on ? " syncing" : "");
+  lbl.textContent = on ? "Synchro…" : "Synchronisé";
+}
+
+// ─── ACTIONS ─────────────────────────────────────────────────────────────────
+function addItem() {
+  const input = document.getElementById("item-input");
+  const name = input.value.trim();
+  if (!name) return;
+  items.push({ id: uid(), name, category: selCat, checked: false, addedAt: new Date().toISOString() });
+  input.value = "";
+  render();
+  pushList();
+  input.focus();
+}
+
+function quickAdd(name, cat) {
+  const exists = items.some(i => i.name.toLowerCase() === name.toLowerCase() && !i.checked);
+  if (exists) return;
+  items.push({ id: uid(), name, category: cat, checked: false, addedAt: new Date().toISOString() });
+  render();
+  pushList();
+}
+
+function toggleItem(id) {
+  const item = items.find(i => i.id === id);
+  if (item) item.checked = !item.checked;
+  render();
+  pushList();
+}
+
+function removeItem(id) {
+  items = items.filter(i => i.id !== id);
+  render();
+  pushList();
+}
+
+function clearChecked() {
+  items = items.filter(i => !i.checked);
+  render();
+  pushList();
+}
+
+function addFav(e) {
+  e.preventDefault();
+  const nameEl = document.getElementById("new-fav-name");
+  const catEl  = document.getElementById("new-fav-cat");
+  if (!nameEl.value.trim()) return;
+  favs.push({ name: nameEl.value.trim(), category: catEl.value });
+  nameEl.value = "";
+  renderQuick();
+  pushFavs();
+}
+
+function removeFav(idx) {
+  favs.splice(idx, 1);
+  renderQuick();
+  pushFavs();
+}
+
+function toggleQuick() {
+  quickOpen = !quickOpen;
+  document.getElementById("quick-panel").className = "quick-panel" + (quickOpen ? " open" : "");
+  document.getElementById("quick-arrow").className  = "arrow" + (quickOpen ? " open" : "");
+}
+
+function toggleEditFavs() {
+  editFavs = !editFavs;
+  document.getElementById("edit-fav-btn").textContent = editFavs ? "✓ Terminer" : "✏️ Modifier les favoris";
+  document.getElementById("new-fav-form").style.display = editFavs ? "flex" : "none";
+  renderQuickChips();
+}
+
+function selectCat(id) {
+  selCat = id;
+  renderCatPills();
+}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function render() {
+  renderCatPills();
+  renderList();
+  renderQuick();
+  renderCounts();
+}
+
+function renderCounts() {
+  const total   = items.length;
+  const checked = items.filter(i => i.checked).length;
+  const pct     = total > 0 ? Math.round((checked / total) * 100) : 0;
+
+  document.getElementById("stat-total").textContent = total;
+  document.getElementById("progress-fill").style.width = pct + "%";
+
+  const doneWrap = document.getElementById("stat-done-wrap");
+  if (checked > 0) {
+    document.getElementById("stat-done").textContent = checked;
+    doneWrap.style.display = "";
+    document.getElementById("clear-btn").style.display = "";
+    document.getElementById("clear-btn").textContent = "Effacer " + checked + " fait" + (checked !== 1 ? "s" : "");
+  } else {
+    doneWrap.style.display = "none";
+    document.getElementById("clear-btn").style.display = "none";
+  }
+}
+
+function renderCatPills() {
+  const el = document.getElementById("cat-pills");
+  el.innerHTML = CATEGORIES.map(c => `
+    <button class="cat-pill ${selCat === c.id ? "on" : ""}"
+      style="${selCat === c.id ? `background:${c.color};border-color:${c.color}` : `border-color:${c.color}88`}"
+      onclick="selectCat('${c.id}')">${c.emoji} ${c.label}</button>
+  `).join("");
+}
+
+function renderList() {
+  const area = document.getElementById("list-area");
+  const grouped = CATEGORIES.map(cat => ({
+    cat, rows: items.filter(i => i.category === cat.id)
+  })).filter(g => g.rows.length > 0);
+
+  if (grouped.length === 0) {
+    area.innerHTML = `<div class="empty"><span class="e-icon">🛒</span>La liste est vide — ajoutez quelque chose !</div>`;
+    return;
+  }
+
+  area.innerHTML = grouped.map(({ cat, rows }) => `
+    <div>
+      <div class="cat-header">
+        <div class="cat-dot" style="background:${cat.color}"></div>
+        <span class="cat-header-label">${cat.emoji} ${cat.label}</span>
+        <span class="cat-count">${rows.filter(r=>!r.checked).length}/${rows.length}</span>
+      </div>
+      ${rows.map(item => `
+        <div class="item-row">
+          <button class="chk ${item.checked ? "done" : ""}"
+            style="${item.checked ? `background:${cat.color};border-color:${cat.color}` : `border-color:#333`}"
+            onclick="toggleItem('${item.id}')">${item.checked ? "✓" : ""}</button>
+          <span class="item-name ${item.checked ? "done" : ""}">${item.name}</span>
+          <button class="del" onclick="removeItem('${item.id}')">×</button>
+        </div>
+      `).join("")}
+    </div>
+  `).join("");
+}
+
+function renderQuick() {
+  renderQuickChips();
+  const formDisplay = editFavs ? "flex" : "none";
+  const formEl = document.getElementById("new-fav-form");
+  if (formEl) formEl.style.display = formDisplay;
+}
+
+function renderQuickChips() {
+  const inList = new Set(items.filter(i => !i.checked).map(i => i.name.toLowerCase()));
+  const inner  = document.getElementById("quick-inner");
+
+  const sections = CATEGORIES.map(cat => {
+    const catFavs = favs.filter(f => f.category === cat.id);
+    if (!catFavs.length) return "";
+    const chips = catFavs.map((fav, i) => {
+      const already = inList.has(fav.name.toLowerCase());
+      const globalIdx = favs.indexOf(fav);
+      return `<button class="fav-chip ${already ? "in-list" : ""}"
+        style="border-color:${cat.color};color:${cat.color}"
+        onclick="${already ? "" : `quickAdd('${fav.name.replace(/'/g,"\\'")}','${fav.category}')`}">
+        ${fav.name}${editFavs ? `<span class="fav-del" onclick="event.stopPropagation();removeFav(${globalIdx})">×</span>` : ""}
+      </button>`;
+    }).join("");
+    return `<div class="quick-section">
+      <div class="quick-section-label" style="color:${cat.color}">${cat.emoji} ${cat.label}</div>
+      <div class="quick-chips">${chips}</div>
+    </div>`;
+  }).join("");
+
+  inner.innerHTML = sections + `
+    <div class="edit-row">
+      <button class="edit-btn" id="edit-fav-btn" onclick="toggleEditFavs()">${editFavs ? "✓ Terminer" : "✏️ Modifier les favoris"}</button>
+    </div>
+    <form id="new-fav-form" style="display:${editFavs ? "flex" : "none"};gap:6px;margin-top:10px;flex-wrap:wrap" onsubmit="addFav(event)">
+      <input id="new-fav-name" class="new-fav-input" placeholder="Nouveau favori…">
+      <select id="new-fav-cat" class="new-fav-sel">
+        ${CATEGORIES.map(c => `<option value="${c.id}">${c.emoji} ${c.label}</option>`).join("")}
+      </select>
+      <button type="submit" class="new-fav-add">Ajouter</button>
+    </form>
+  `;
+}
+
+// ─── KEYBOARD ─────────────────────────────────────────────────────────────────
+document.getElementById("item-input").addEventListener("keydown", e => {
+  if (e.key === "Enter") addItem();
+});
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+loadAll();
+pollTimer = setInterval(loadAll, 10000);
+
+// Show install prompt if not already in standalone mode
+if (!window.navigator.standalone) {
+  const banner = document.getElementById("install-banner");
+  if (banner) banner.style.display = "block";
+}
+
+
+</script>
+</body>
+</html>

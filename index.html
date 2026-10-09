@@ -71,6 +71,17 @@
     letter-spacing: .12em; text-transform: uppercase; flex: none; }
   .add-btn { width: 46px; padding: 0; font-size: 22px; font-weight: 300; letter-spacing: 0; }
 
+  .add-wrap { position: relative; flex: 1; }
+  .suggest { position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 20; list-style: none; margin: 0; padding: 4px 0;
+    background: #fff; border: 1px solid var(--line); border-radius: 2px; box-shadow: 0 8px 24px rgba(17,17,18,.08); }
+  .suggest[hidden] { display: none; }
+  .sg { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 11px 12px; cursor: pointer; }
+  .sg + .sg { border-top: 1px solid #F1ECE3; }
+  .sg b { font-weight: 600; }
+  .sg.active, .sg:hover { background: var(--paper); }
+  .sg-cat { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .sg.in-list { color: #A9A39A; cursor: default; }
+  .sg.in-list .sg-cat { color: var(--gold-text); }
   .chips { display: flex; gap: 8px; overflow-x: auto; padding: 12px 0 2px; scrollbar-width: none; margin: 0 -16px; padding-left: 16px; padding-right: 16px; }
   .chips::-webkit-scrollbar { display: none; }
   .chip { flex: none; border: 1px solid var(--line); background: #fff; border-radius: 2px; padding: 6px 14px; font-size: 13px; letter-spacing: .03em; color: var(--ink); }
@@ -143,7 +154,11 @@
   <h2>Ajouter</h2>
   <div class="card">
     <div class="form-row">
-      <input id="item-input" placeholder="Ajouter un article…" autocomplete="off" enterkeyhint="done">
+      <div class="add-wrap">
+        <input id="item-input" placeholder="Ajouter un article…" autocomplete="off" autocorrect="off" enterkeyhint="done"
+          role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="suggest">
+        <ul class="suggest" id="suggest" role="listbox" hidden></ul>
+      </div>
       <button class="btn add-btn" data-act="add" aria-label="Ajouter">+</button>
     </div>
     <div class="chips" id="cat-pills"></div>
@@ -256,6 +271,10 @@ let retryTimer = null;
 let selCat    = "other";
 let quickOpen = false;
 let editFavs  = false;
+let catTouched = false;  // catégorie choisie à la main pour l'article en cours
+let sugg = [], activeSugg = -1;
+let history = {};        // articles déjà ajoutés sur ce téléphone : nom → catégorie, nb d'ajouts
+const HIST_KEY = "courses-history";
 
 const viaGAS = typeof google !== "undefined" && !!(google.script && google.script.run);
 const configured = viaGAS || !APPS_SCRIPT_URL.includes("COLLE_TON_URL");
@@ -405,18 +424,125 @@ function updateSync() {
   lbl.textContent = text;
 }
 
+// ─── SUGGESTIONS ─────────────────────────────────────────────────────────────
+function norm(s) { return String(s).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim(); }
+
+function loadHistory() {
+  try { history = JSON.parse(localStorage.getItem(HIST_KEY) || "{}") || {}; } catch (e) { history = {}; }
+}
+function remember(name, category) {
+  const k = norm(name);
+  const h = history[k] || { n: 0 };
+  history[k] = { name, category, n: h.n + 1 };
+  try { localStorage.setItem(HIST_KEY, JSON.stringify(history)); } catch (e) {}
+}
+
+// Favoris + articles déjà ajoutés + articles de la liste actuelle
+function candidates() {
+  const map = new Map();
+  favs.forEach(f => map.set(norm(f.name), { name: f.name, category: normCat(f.category), n: 0 }));
+  Object.entries(history).forEach(([k, h]) => {
+    const c = map.get(k);
+    if (c) c.n = h.n; else map.set(k, { name: h.name, category: normCat(h.category), n: h.n });
+  });
+  items.forEach(i => {
+    const k = norm(i.name);
+    if (!map.has(k)) map.set(k, { name: i.name, category: normCat(i.category), n: 0 });
+  });
+  return [...map.values()];
+}
+
+function findSuggestions(q) {
+  const nq = norm(q);
+  if (!nq) return [];
+  return candidates().map(c => {
+    const nn = norm(c.name);
+    let score = 0;
+    if (nn.startsWith(nq)) score = 3;                                   // "to" → Tomates
+    else if (nn.split(/[\s/(),'’-]+/).some(w => w.startsWith(nq))) score = 2; // "terre" → Pommes de terre
+    else if (nq.length >= 3 && nn.includes(nq)) score = 1;            // milieu de mot, à partir de 3 lettres
+    return { ...c, score };
+  }).filter(c => c.score > 0)
+    .sort((a, b) => b.score - a.score || b.n - a.n || a.name.localeCompare(b.name, "fr"))
+    .slice(0, 6);
+}
+
+function highlight(name, q) {
+  const i = name.toLowerCase().indexOf(q.trim().toLowerCase());
+  if (!q.trim() || i < 0) return esc(name);
+  const j = i + q.trim().length;
+  return esc(name.slice(0, i)) + "<b>" + esc(name.slice(i, j)) + "</b>" + esc(name.slice(j));
+}
+
+function renderSuggest() {
+  const input = document.getElementById("item-input");
+  const el = document.getElementById("suggest");
+  sugg = findSuggestions(input.value);
+  if (!sugg.length || document.activeElement !== input) {
+    el.hidden = true; input.setAttribute("aria-expanded", "false"); input.removeAttribute("aria-activedescendant");
+    return;
+  }
+  const inList = new Set(items.filter(i => !i.checked).map(i => norm(i.name)));
+  el.innerHTML = sugg.map((s, i) => {
+    const already = inList.has(norm(s.name));
+    return `<li role="option" id="sg-${i}" class="sg ${i === activeSugg ? "active" : ""} ${already ? "in-list" : ""}"
+      data-act="sugg" data-i="${i}" aria-selected="${i === activeSugg}">
+      <span>${highlight(s.name, input.value)}</span>
+      <span class="sg-cat">${already ? "Déjà dans la liste" : esc(getCat(s.category).label)}</span></li>`;
+  }).join("");
+  el.hidden = false;
+  input.setAttribute("aria-expanded", "true");
+  if (activeSugg >= 0) input.setAttribute("aria-activedescendant", "sg-" + activeSugg);
+  else input.removeAttribute("aria-activedescendant");
+}
+
+function hideSuggest() {
+  activeSugg = -1;
+  document.getElementById("suggest").hidden = true;
+  document.getElementById("item-input").setAttribute("aria-expanded", "false");
+}
+
+// Choisir une suggestion : l'ajoute directement, dans sa catégorie
+function pickSuggestion(i) {
+  const s = sugg[i];
+  if (!s) return;
+  const input = document.getElementById("item-input");
+  const already = items.some(it => !it.checked && norm(it.name) === norm(s.name));
+  if (!already) {
+    const item = { id: uid(), name: s.name, category: s.category, checked: false, addedAt: new Date().toISOString() };
+    remember(s.name, s.category);
+    mutate({ action: "add", item }, () => items.push(item));
+  }
+  input.value = "";
+  catTouched = false;
+  hideSuggest();
+  input.focus();
+}
+
+// En tapant un nom connu, la bonne catégorie se sélectionne toute seule
+function autoCategory() {
+  if (catTouched) return;
+  const nq = norm(document.getElementById("item-input").value);
+  const match = nq && candidates().find(c => norm(c.name) === nq);
+  if (match && match.category !== selCat) { selCat = match.category; renderCatPills(); }
+}
+
 // ─── ACTIONS ─────────────────────────────────────────────────────────────────
 function addItem() {
   const input = document.getElementById("item-input");
   const name = input.value.trim();
   if (!name) return;
   const item = { id: uid(), name, category: selCat, checked: false, addedAt: new Date().toISOString() };
+  remember(name, selCat);
   mutate({ action: "add", item }, () => items.push(item));
   input.value = "";
+  catTouched = false;
+  hideSuggest();
   input.focus();
 }
 
 function quickAdd(name, cat) {
+  remember(name, cat);
   const exists = items.some(i => i.name.toLowerCase() === name.toLowerCase() && !i.checked);
   if (exists) return;
   const item = { id: uid(), name, category: cat, checked: false, addedAt: new Date().toISOString() };
@@ -566,7 +692,8 @@ document.addEventListener("click", e => {
   if (!el) return;
   switch (el.dataset.act) {
     case "add":       addItem(); break;
-    case "cat":       selectCat(el.dataset.cat); break;
+    case "cat":       catTouched = true; selectCat(el.dataset.cat); break;
+    case "sugg":      if (!el.classList.contains("in-list")) pickSuggestion(Number(el.dataset.i)); break;
     case "toggle":    toggleItem(el.dataset.id); break;
     case "del":       removeItem(el.dataset.id); break;
     case "clear":     clearChecked(); break;
@@ -583,9 +710,28 @@ document.addEventListener("click", e => {
   }
 });
 
-document.getElementById("item-input").addEventListener("keydown", e => {
-  if (e.key === "Enter") addItem();
+const itemInput = document.getElementById("item-input");
+itemInput.addEventListener("input", () => {
+  activeSugg = -1;
+  if (!itemInput.value.trim()) catTouched = false;
+  autoCategory();
+  renderSuggest();
 });
+itemInput.addEventListener("focus", renderSuggest);
+itemInput.addEventListener("blur", () => setTimeout(hideSuggest, 150));
+itemInput.addEventListener("keydown", e => {
+  const open = !document.getElementById("suggest").hidden && sugg.length;
+  if (e.key === "ArrowDown" && open) { e.preventDefault(); activeSugg = (activeSugg + 1) % sugg.length; renderSuggest(); }
+  else if (e.key === "ArrowUp" && open) { e.preventDefault(); activeSugg = (activeSugg - 1 + sugg.length) % sugg.length; renderSuggest(); }
+  else if (e.key === "Escape") hideSuggest();
+  else if (e.key === "Enter") {
+    e.preventDefault();
+    if (open && activeSugg >= 0) pickSuggestion(activeSugg); else addItem();
+  }
+});
+// Toucher une suggestion ne doit pas fermer le clavier ni la liste
+["mousedown", "pointerdown"].forEach(ev =>
+  document.getElementById("suggest").addEventListener(ev, e => e.preventDefault()));
 document.getElementById("new-fav-form").addEventListener("submit", addFav);
 
 // Pause quand l'app est en arrière-plan, rafraîchit au retour
@@ -599,6 +745,7 @@ document.getElementById("new-fav-cat").innerHTML =
   CATEGORIES.map(c => `<option value="${c.id}">${esc(c.label)}</option>`).join("");
 
 restore();
+loadHistory();
 render();
 updateSync();
 flush();

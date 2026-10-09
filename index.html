@@ -2,333 +2,191 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Courses">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#141414">
-<title>Notre liste de courses 🛒</title>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#111112">
+<title>Courses</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-:root {
-  --accent: #4ade80;
-  --accent-dim: rgba(74,222,128,.12);
-  --text: #F0F0F0;
-  --text-muted: #666;
-  --border: #222222;
-  --bg: #0A0A0A;
-  --surface: #141414;
-  --surface2: #1C1C1C;
-  --danger: #f87171;
-  --font-display: 'Bricolage Grotesque', sans-serif;
-  --font-body: 'Plus Jakarta Sans', sans-serif;
-}
+  :root {
+    --ink: #111112;
+    --charcoal: #3B3B3D;
+    --shallow: #EDE3D1;
+    --sun: #D5BA8C;
+    --gold-text: #9C7C47;
+    --paper: #F5F0E8;
+    --line: #E4DCCD;
+    --muted: #6E6A63;
+    --down: #A5483A;
+    --up: #4F7A5A;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--paper); color: var(--ink);
+    font-family: "Montserrat", "Helvetica Neue", Arial, sans-serif; font-weight: 400; font-size: 15px; line-height: 1.55;
+    -webkit-text-size-adjust: 100%; }
+  b, strong { font-weight: 600; }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--sun); outline-offset: 2px; }
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body {
-  height: 100%; width: 100%;
-  background: var(--bg); font-family: var(--font-body); color: var(--text);
-  overflow-x: hidden;
-  -webkit-text-size-adjust: 100%;
-}
+  .app { max-width: 560px; margin: 0 auto; padding: 0 18px calc(88px + env(safe-area-inset-bottom)); }
 
-.app {
-  width: 100%; max-width: 600px; margin: 0 auto;
-  min-height: 100vh; min-height: -webkit-fill-available;
-  height: 100%;
-  background: var(--surface); display: flex; flex-direction: column;
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
-  padding-left: env(safe-area-inset-left);
-  padding-right: env(safe-area-inset-right);
-}
+  /* ── Top bar ── */
+  .topbar { background: var(--ink); color: #fff; padding: calc(14px + env(safe-area-inset-top)) 18px 14px; }
+  .topbar .in { max-width: 560px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .brand { display: grid; line-height: 1; text-align: center; }
+  .brand .w1 { font-size: 21px; font-weight: 400; letter-spacing: .14em; }
+  .brand .w2 { font-size: 10.5px; font-weight: 400; letter-spacing: .16em; margin-top: 4px; color: #CBCBCB; }
+  .asof { font-size: 12px; color: #CBCBCB; letter-spacing: .04em; text-align: right; }
+  .asof b { color: var(--sun); font-weight: 500; letter-spacing: .12em; text-transform: uppercase; display: block; font-size: 11px; margin-bottom: 3px; }
+  .sync { display: inline-flex; align-items: center; gap: 6px; }
+  .sync.error { color: #E3A193; }
+  .sync-dot { width: 6px; height: 6px; border-radius: 50%; background: #9CC7A4; flex-shrink: 0; }
+  .sync-dot.syncing { background: var(--sun); animation: pulse 1s infinite; }
+  .sync-dot.error { background: #E3A193; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
 
-@media (min-width: 601px) {
-  .app { border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
-}
+  /* ── Hero ── */
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 2px; padding: 16px; margin-top: 12px; }
+  .hero.card { background: var(--ink); border: 0; border-left: 2px solid var(--sun); color: #fff; padding: 22px 20px 20px; margin-top: 18px; }
+  .hero .fig { font-size: 42px; font-weight: 300; line-height: 1.05; color: var(--sun); }
+  .hero .cap { color: #CBCBCB; font-size: 14px; margin-top: 8px; }
+  .bar { height: 4px; background: var(--charcoal); overflow: hidden; margin-top: 16px; }
+  .bar i { display: block; height: 100%; background: var(--sun); width: 0; }
 
-/* ── HEADER ── */
-.hd {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  padding: 0;
-}
-.hd-top {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 20px 24px 0;
-}
-.hd-title {
-  font-family: var(--font-display);
-  font-size: 28px; font-weight: 800; letter-spacing: -0.8px;
-  color: var(--text); line-height: 1;
-}
-.hd-title span { color: var(--accent); }
-.hd-sync {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 11px; font-weight: 600; color: var(--text-muted);
-  letter-spacing: .3px;
-}
-.sync-dot { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; flex-shrink: 0; }
-.sync-dot.syncing { background: #f59e0b; animation: pulse 1s infinite; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+  h2 { font-size: 12px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: var(--gold-text);
+    margin: 30px 0 10px; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  h2 .count { color: var(--muted); font-weight: 500; letter-spacing: .06em; }
 
-.hd-stats {
-  display: flex; align-items: center; gap: 16px;
-  padding: 12px 24px 0;
-}
-.hd-stat { font-size: 12px; color: var(--text-muted); font-weight: 500; }
-.hd-stat strong { color: var(--text); font-weight: 700; }
+  /* ── Add form ── */
+  .form-row { display: flex; gap: 8px; }
+  input, select { border: 1px solid var(--line); background: #fff; border-radius: 2px; padding: 11px 12px; width: 100%; font-size: 16px; outline: none; }
+  input:focus, select:focus { border-color: var(--sun); }
+  input::placeholder { color: #A9A39A; }
+  .btn { background: var(--ink); color: #fff; border: 0; border-radius: 2px; padding: 12px 16px; font-weight: 500; font-size: 13px;
+    letter-spacing: .12em; text-transform: uppercase; flex: none; }
+  .add-btn { width: 46px; padding: 0; font-size: 22px; font-weight: 300; letter-spacing: 0; }
 
-.progress-wrap { padding: 14px 24px 18px; }
-.progress-bar-bg {
-  height: 2px; background: var(--border); border-radius: 2px; overflow: hidden;
-}
-.progress-bar-fill {
-  height: 100%; background: var(--accent); border-radius: 2px;
-  transition: width .4s ease;
-}
+  .chips { display: flex; gap: 8px; overflow-x: auto; padding: 12px 0 2px; scrollbar-width: none; margin: 0 -16px; padding-left: 16px; padding-right: 16px; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip { flex: none; border: 1px solid var(--line); background: #fff; border-radius: 2px; padding: 6px 14px; font-size: 13px; letter-spacing: .03em; color: var(--ink); }
+  .chip[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
 
-/* ── FORM ── */
-.form-wrap { padding: 16px 24px 14px; border-bottom: 1px solid var(--border); background: var(--surface); }
-.form-row { display: flex; gap: 8px; }
-.txt-input {
-  flex: 1; padding: 11px 16px;
-  border: 1.5px solid var(--border); border-radius: 10px;
-  font-family: var(--font-body); font-size: 15px; font-weight: 500;
-  background: var(--surface2); color: var(--text); outline: none;
-  transition: border-color .18s, box-shadow .18s;
-}
-.txt-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(74,222,128,.08); }
-.txt-input::placeholder { color: #444; font-weight: 400; }
-.add-btn {
-  width: 44px; height: 44px; background: var(--accent); color: #0A0A0A;
-  border: none; border-radius: 10px; font-size: 24px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: background .15s, transform .1s;
-  flex-shrink: 0;
-}
-.add-btn:hover { background: #86efac; }
-.add-btn:active { transform: scale(.92); }
+  /* ── Quick add (favourites) ── */
+  .quick-toggle { width: 100%; background: none; border: 0; padding: 0; text-align: left; }
+  .quick-toggle h2 { margin-bottom: 0; }
+  .arrow { display: inline-block; transition: transform .2s; color: var(--muted); }
+  .arrow.open { transform: rotate(180deg); }
+  .quick-panel { display: none; }
+  .quick-panel.open { display: block; }
+  .quick-section + .quick-section { margin-top: 14px; }
+  .quick-label { font-size: 12px; color: var(--muted); letter-spacing: .04em; margin-bottom: 6px; }
+  .fav-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+  .fav-chip { border: 1px solid var(--line); background: #fff; border-radius: 2px; padding: 5px 11px; font-size: 13px; color: var(--ink); }
+  @media (hover: hover) { .fav-chip:not(.in-list):hover { background: var(--ink); color: #fff; border-color: var(--ink); } }
+  .fav-chip.in-list { background: var(--shallow); border-color: var(--shallow); color: var(--gold-text); cursor: default; }
+  .fav-chip .fav-del { margin-left: 6px; color: var(--down); }
+  .quick-panel.editing .fav-chip { border-style: dashed; border-color: #CFC4B1; }
+  .edit-row { display: flex; align-items: center; gap: 8px; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--line); }
+  .edit-hint { flex: 1; font-size: 12px; color: var(--muted); font-style: italic; }
+  .link-btn { margin-left: auto; background: none; border: 0; padding: 4px 0; color: var(--gold-text); text-transform: uppercase; letter-spacing: .1em; font-size: 12px; font-weight: 600; }
+  .new-fav-form { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-top: 12px; }
+  .new-fav-form select { grid-column: 1 / -1; grid-row: 2; }
+  .new-fav-form .btn { grid-row: 1; grid-column: 2; }
 
-/* category picker */
-.cat-picker-overlay {
-  display: none; position: fixed; inset: 0;
-  background: rgba(0,0,0,.7); z-index: 100;
-  align-items: flex-end; justify-content: center;
-}
-.cat-picker-overlay.open { display: flex; }
-.cat-picker-sheet {
-  background: #1a1a1a; border-radius: 18px 18px 0 0;
-  padding: 12px 0 32px; width: 100%; max-height: 70vh;
-  overflow-y: auto;
-}
-.cat-picker-handle {
-  width: 36px; height: 4px; background: #333; border-radius: 2px;
-  margin: 0 auto 14px;
-}
-.cat-picker-title {
-  font-size: 11px; font-weight: 700; letter-spacing: 1px;
-  text-transform: uppercase; color: var(--text-muted);
-  padding: 0 20px 10px;
-}
-.cat-picker-item {
-  display: flex; align-items: center; gap: 12px;
-  padding: 13px 20px; cursor: pointer;
-  transition: background .1s; border: none;
-  background: transparent; width: 100%; text-align: left;
-  font-family: var(--font-body);
-}
-.cat-picker-item:hover { background: #222; }
-.cat-picker-item:active { background: #252525; }
-.cat-picker-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-.cat-picker-label { font-size: 15px; font-weight: 500; color: var(--text); }
+  /* ── List ── */
+  .list { list-style: none; margin: 0; padding: 0 16px; }
+  .item-row { display: flex; align-items: center; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--line); }
+  .item-row:last-child { border-bottom: 0; }
+  .chk { width: 22px; height: 22px; border-radius: 2px; border: 1.5px solid var(--ink); background: #fff; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 12px; padding: 0; color: var(--sun); transition: background .15s; }
+  .chk.done { background: var(--ink); }
+  .item-name { flex: 1; font-size: 15px; line-height: 1.35; word-break: break-word; }
+  .item-name.done { color: #A9A39A; text-decoration: line-through; }
+  .del { opacity: 0; width: 32px; height: 32px; border: 0; background: transparent; color: var(--muted); font-size: 20px; font-weight: 300;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: opacity .1s, color .1s; }
+  .item-row:hover .del, .del:focus-visible { opacity: 1; }
+  .del:hover { color: var(--down); }
+  @media (hover: none) { .del { opacity: .55; } }
 
-/* cat-pills removed */
+  .empty { color: var(--muted); font-size: 14px; padding: 28px 0; text-align: center; }
+  .notice { background: #fff; border: 1px solid var(--line); border-left: 2px solid var(--sun); padding: 10px 12px; font-size: 12px; font-style: italic; color: var(--muted); margin-top: 18px; }
 
-/* ── QUICK PANEL ── */
-.quick-toggle {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 11px 24px; border-bottom: 1px solid var(--border);
-  cursor: pointer; user-select: none;
-  background: var(--bg);
-  background: #0f0f0f;
-}
-.quick-toggle-label {
-  font-size: 11px; font-weight: 700; letter-spacing: 1px;
-  text-transform: uppercase; color: var(--text-muted);
-}
-.arrow { font-size: 10px; color: var(--text-muted); transition: transform .2s; display: inline-block; }
-.arrow.open { transform: rotate(180deg); }
-.quick-panel { background: #0f0f0f; border-bottom: 1px solid var(--border); max-height: 55vh; overflow-y: auto; display: none; }
-.quick-panel.open { display: block; }
-.quick-inner { padding: 12px 24px 16px; }
-.quick-section { margin-bottom: 12px; }
-.quick-section-label {
-  font-size: 10px; font-weight: 700; letter-spacing: 1px;
-  text-transform: uppercase; margin-bottom: 6px; color: var(--text-muted);
-}
-.quick-chips { display: flex; flex-wrap: wrap; gap: 5px; }
-.fav-chip {
-  padding: 4px 11px; border-radius: 20px; border: 1.5px solid;
-  font-size: 12px; font-weight: 600; cursor: pointer;
-  background: var(--surface2); transition: all .14s;
-  font-family: var(--font-body);
-}
-.fav-chip.in-list { opacity: .28; cursor: default; }
-.fav-chip:not(.in-list):hover { color: #fff !important; border-color: transparent !important; }
-.fav-chip .fav-del { margin-left: 4px; opacity: .45; display: none; }
-.fav-chip:hover .fav-del { display: inline; }
+  /* ── Bottom bar ── */
+  .bottombar { position: fixed; left: 0; right: 0; bottom: 0; background: #fff; border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); }
+  .bottombar .in { max-width: 560px; margin: 0 auto; padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; }
+  .ft-note { font-size: 12px; color: var(--muted); letter-spacing: .04em; }
+  .clear-btn { background: none; border: 1px solid var(--down); color: var(--down); border-radius: 2px; padding: 8px 12px; font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
 
-.edit-row { display: flex; align-items: center; justify-content: flex-end; margin-top: 10px; }
-.edit-btn { font-size: 11px; font-weight: 700; letter-spacing: .4px; color: var(--text-muted); background: none; border: none; cursor: pointer; padding: 3px 6px; border-radius: 6px; font-family: var(--font-body); text-transform: uppercase; }
-.new-fav-form { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
-.new-fav-input { flex: 1; min-width: 120px; padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-family: var(--font-body); font-size: 13px; background: var(--surface2); color: var(--text); outline: none; }
-.new-fav-input:focus { border-color: var(--accent); }
-.new-fav-sel { padding: 8px 10px; border: 1.5px solid var(--border); border-radius: 8px; font-family: var(--font-body); font-size: 13px; background: var(--surface2); color: var(--text); cursor: pointer; outline: none; }
-.new-fav-add { padding: 8px 14px; background: var(--accent); color: #0A0A0A; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: var(--font-body); }
-
-/* ── LIST ── */
-.list-area { flex: 1; overflow-y: auto; padding-bottom: 16px; }
-.cat-header {
-  display: flex; align-items: center; gap: 10px;
-  padding: 14px 24px 6px;
-  position: sticky; top: 0; background: var(--surface); z-index: 2;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 2px;
-}
-.cat-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.cat-header-label {
-  font-size: 10.5px; font-weight: 700; letter-spacing: 1px;
-  text-transform: uppercase; color: var(--text-muted); flex: 1;
-}
-.cat-count { font-size: 10.5px; font-weight: 700; color: var(--text-muted); }
-
-.item-row {
-  display: flex; align-items: center;
-  padding: 10px 24px; gap: 12px;
-  border-bottom: 1px solid var(--border);
-  transition: background .1s;
-}
-.item-row:last-child { border-bottom: none; }
-.item-row:hover { background: var(--surface2); }
-
-.chk {
-  width: 20px; height: 20px; border-radius: 50%;
-  border: 1.5px solid #333; background: transparent;
-  cursor: pointer; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 10px; transition: all .16s;
-}
-.chk.done { border-color: transparent; color: #0A0A0A; }
-.item-name { flex: 1; font-size: 14.5px; font-weight: 500; color: #E8E8E8; line-height: 1.3; }
-.item-name.done { color: #3a3a3a; text-decoration: line-through; font-weight: 400; }
-.del {
-  opacity: 0; width: 24px; height: 24px; border: none; background: transparent;
-  cursor: pointer; color: #444; font-size: 18px; border-radius: 5px;
-  display: flex; align-items: center; justify-content: center;
-  transition: opacity .1s, color .1s;
-}
-.item-row:hover .del { opacity: 1; }
-.del:hover { color: var(--danger); }
-
-.empty { text-align: center; padding: 60px 24px; font-family: var(--font-body); color: #444; font-size: 15px; }
-.empty .e-icon { font-size: 36px; display: block; margin-bottom: 12px; opacity: .5; }
-.loading { text-align: center; padding: 40px; color: #444; font-size: 14px; letter-spacing: .3px; }
-
-/* ── FOOTER ── */
-.ft {
-  padding: 12px 24px; border-top: 1px solid var(--border);
-  display: flex; justify-content: space-between; align-items: center;
-  background: var(--surface);
-}
-.ft-note { font-size: 11px; color: #444; font-weight: 500; letter-spacing: .3px; }
-.clear-btn {
-  font-size: 11.5px; font-weight: 700; color: var(--danger);
-  background: none; border: none; cursor: pointer;
-  padding: 5px 10px; border-radius: 7px;
-  font-family: var(--font-body); letter-spacing: .3px;
-  transition: background .12s;
-}
-.clear-btn:hover { background: rgba(248,113,113,.1); }
+  @media (prefers-reduced-motion: no-preference) { .bar i { transition: width .6s ease; } }
+  @media (prefers-reduced-motion: reduce) { .sync-dot.syncing { animation: none; } }
 </style>
 </head>
 <body>
+<header class="topbar"><div class="in">
+  <span class="brand" aria-label="Courses, notre liste"><span class="w1">COURSES</span><span class="w2">NOTRE LISTE</span></span>
+  <span class="asof"><b>Liste partagée</b><span class="sync" id="sync-wrap"><span class="sync-dot" id="sync-dot"></span><span id="sync-label">Synchronisé</span></span></span>
+</div></header>
+
 <div class="app">
 
-  <!-- HEADER -->
-  <header class="hd">
-    <div class="hd-top">
-      <div class="hd-title">Courses<span>.</span></div>
-      <div class="hd-sync">
-        <span class="sync-dot" id="sync-dot"></span>
-        <span id="sync-label">Synchronisé</span>
-      </div>
-    </div>
-    <div class="hd-stats">
-      <span class="hd-stat"><strong id="stat-total">0</strong> article</span>
-      <span class="hd-stat" id="stat-done-wrap" style="display:none"><strong id="stat-done">0</strong> fait</span>
-    </div>
-    <div class="progress-wrap">
-      <div class="progress-bar-bg">
-        <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
-      </div>
-    </div>
-  </header>
+  <section class="hero card" aria-live="polite">
+    <div class="fig" id="stat-left">0</div>
+    <div class="cap" id="stat-cap">article à acheter</div>
+    <div class="bar"><i id="progress-fill"></i></div>
+  </section>
 
-  <!-- FORM -->
-  <div class="form-wrap">
+  <h2>Ajouter</h2>
+  <div class="card">
     <div class="form-row">
-      <input class="txt-input" id="item-input" placeholder="Ajouter un article…" autocomplete="off">
-      <button class="add-btn" id="add-btn" onclick="handleAdd()">+</button>
+      <input id="item-input" placeholder="Ajouter un article…" autocomplete="off" enterkeyhint="done">
+      <button class="btn add-btn" data-act="add" aria-label="Ajouter">+</button>
     </div>
-    <div id="selected-cat-row" style="display:none; margin-top:8px; display:flex; align-items:center; gap:6px; cursor:pointer;" onclick="openCatPicker()">
-      <span id="selected-cat-dot" style="width:8px;height:8px;border-radius:50%;background:#666;flex-shrink:0;display:inline-block"></span>
-      <span id="selected-cat-label" style="font-size:12px;font-weight:600;color:var(--text-muted);letter-spacing:.3px"></span>
-      <span style="font-size:11px;color:#444;margin-left:2px">▾</span>
-    </div>
+    <div class="chips" id="cat-pills"></div>
   </div>
 
-  <!-- CATEGORY PICKER SHEET -->
-  <div class="cat-picker-overlay" id="cat-picker-overlay" onclick="closeCatPicker(event)">
-    <div class="cat-picker-sheet">
-      <div class="cat-picker-handle"></div>
-      <div class="cat-picker-title">Choisir une catégorie</div>
-      <div id="cat-picker-list"></div>
-    </div>
-  </div>
-
-  <!-- QUICK ADD TOGGLE -->
-  <div class="quick-toggle" onclick="toggleQuick()">
-    <span class="quick-toggle-label">⚡ Ajout rapide — favoris</span>
-    <span class="arrow" id="quick-arrow">▼</span>
-  </div>
-
-  <!-- QUICK PANEL -->
+  <button class="quick-toggle" data-act="quick" aria-expanded="false" id="quick-toggle">
+    <h2><span>Ajout rapide, favoris</span><span class="arrow" id="quick-arrow">▾</span></h2>
+  </button>
   <div class="quick-panel" id="quick-panel">
-    <div class="quick-inner" id="quick-inner"></div>
+    <div class="card">
+      <div id="quick-chips"></div>
+      <div class="edit-row">
+        <span class="edit-hint" id="edit-hint" style="display:none">Touchez un favori pour le supprimer</span>
+        <button class="link-btn" id="edit-fav-btn" data-act="edit-favs">Modifier les favoris</button>
+      </div>
+      <form id="new-fav-form" class="new-fav-form" style="display:none">
+        <input id="new-fav-name" placeholder="Nouveau favori…" autocomplete="off">
+        <button type="submit" class="btn">Ajouter</button>
+        <select id="new-fav-cat"></select>
+      </form>
+    </div>
   </div>
 
-  <!-- LIST -->
-  <div class="list-area" id="list-area">
-    <div class="loading">Chargement…</div>
-  </div>
+  <div id="list-area"></div>
 
-  <!-- INSTALL BANNER (shown only in browser, hidden when standalone) -->
-  <div id="install-banner" style="display:none; padding:10px 16px; background:#1a1a1a; border-bottom:1px solid #222; text-align:center;">
-    <span style="font-size:12px; color:#888;">📲 Ajouter à l'écran d'accueil pour le plein écran</span>
-  </div>
-
-  <!-- FOOTER -->
-  <footer class="ft">
-    <span class="ft-note">Synchro auto toutes les 10s</span>
-    <button class="clear-btn" id="clear-btn" onclick="clearChecked()" style="display:none">Effacer les faits</button>
-  </footer>
-
+  <div id="install-banner" class="notice" style="display:none">Ajoutez l'app à l'écran d'accueil pour l'ouvrir en plein écran.</div>
 </div>
 
+<nav class="bottombar"><div class="in">
+  <span class="ft-note">Synchro auto toutes les 10 s</span>
+  <button class="clear-btn" id="clear-btn" data-act="clear" style="display:none">Effacer les faits</button>
+</div></nav>
+
 <script>
-// ─── DATA ─────────────────────────────────────────────────────────────────────
+// ─── CONFIG ──────────────────────────────────────────────────────────────────
+// Servie par Apps Script (lien /exec) : rien à configurer.
+// Hébergée ailleurs : colle l'URL /exec ici.
+const APPS_SCRIPT_URL = "COLLE_TON_URL_ICI";
+const TOKEN   = "";      // même valeur que TOKEN dans Code.gs (vide = désactivé)
+const POLL_MS = 10000;
+const LS_KEY  = "courses-v2";
+
+// ─── DATA ────────────────────────────────────────────────────────────────────
 const CATEGORIES = [
   { id: "produce",    label: "Fruits & Légumes",      emoji: "🥦", color: "#4a7c59" },
   { id: "dairy",      label: "Produits laitiers",     emoji: "🧀", color: "#c2853a" },
@@ -342,6 +200,7 @@ const CATEGORIES = [
   { id: "hygiene",    label: "Hygiène",               emoji: "🚿", color: "#7a5a8a" },
   { id: "other",      label: "Autre",                 emoji: "🛒", color: "#7a6b8a" },
 ];
+const CAT_IDS = new Set(CATEGORIES.map(c => c.id));
 
 const DEFAULT_FAVS = [
   {name:"Tomates",category:"produce"},{name:"Oignons",category:"produce"},{name:"Ail",category:"produce"},
@@ -384,85 +243,166 @@ const DEFAULT_FAVS = [
   {name:"Déodorant",category:"hygiene"},{name:"Mouchoirs",category:"hygiene"},{name:"Coton-tiges",category:"hygiene"},
 ];
 
-let items = [];
-let favs  = [...DEFAULT_FAVS];
-let selCat = "other";
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let items     = [];
+let favs      = [...DEFAULT_FAVS];
+let favsInit  = false;   // le serveur a-t-il déjà ses favoris ?
+let queue     = [];      // modifications pas encore confirmées par le serveur
+let sending   = false;
+let polling   = false;
+let netError  = false;
+let localRev  = 0;       // incrémenté à chaque modification locale
+let retryTimer = null;
+let selCat    = "other";
 let quickOpen = false;
 let editFavs  = false;
-let syncing   = false;
-let pollTimer = null;
+
+const viaGAS = typeof google !== "undefined" && !!(google.script && google.script.run);
+const configured = viaGAS || !APPS_SCRIPT_URL.includes("COLLE_TON_URL");
 
 function uid() { return Math.random().toString(36).slice(2) + Date.now().toString(36); }
 function getCat(id) { return CATEGORIES.find(c => c.id === id) || CATEGORIES.at(-1); }
+function normCat(id) { return CAT_IDS.has(id) ? id : "other"; }
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+}
+function plural(n, word) { return n === 1 ? word : word + "s"; }
+function favKey(f) { return f.name.trim().toLowerCase() + "|" + normCat(f.category); }
 
-// ─── CONFIG ───────────────────────────────────────────────────────────────────
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw5p572zN0O5rGzXglDz9-gIkNUeJ6ClAvSxCsafxkWpOZj-xFs-tPbxU56aHkPKz468A/exec";
+// ─── LOCAL CACHE (affichage instantané + modifs hors ligne conservées) ────────
+function persist() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify({ items, favs, favsInit, queue })); } catch (e) {}
+}
+function restore() {
+  try {
+    const s = JSON.parse(localStorage.getItem(LS_KEY) || "null");
+    if (!s) return;
+    if (Array.isArray(s.items)) items = s.items;
+    if (Array.isArray(s.favs))  favs  = s.favs;
+    favsInit = !!s.favsInit;
+    if (Array.isArray(s.queue)) queue = s.queue;
+  } catch (e) {}
+}
 
-// ─── API ──────────────────────────────────────────────────────────────────────
-let saving = false;        // true while a save is in flight
-let pendingListSave = null; // latest items snapshot waiting to be saved
-let pendingFavsSave = null;
+// ─── API ─────────────────────────────────────────────────────────────────────
+async function api(payload) {
+  const body = { ...payload, token: TOKEN };
+  let data;
+  if (viaGAS) {
+    data = await new Promise((resolve, reject) =>
+      google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).rpc(body));
+  } else {
+    data = await viaFetch(body);
+  }
+  if (!data) throw new Error("Réponse vide");
+  if (data.error) { const err = new Error(data.error); err.fatal = !!data.fatal; throw err; }
+  return data;
+}
 
-async function api(action, payload) {
+async function viaFetch(body) {
   const res = await fetch(APPS_SCRIPT_URL, {
-    method: "POST", redirect: "follow",
-    body: JSON.stringify({ action, ...payload }),
+    method: "POST",
+    redirect: "follow",
+    body: JSON.stringify(body), // text/plain : pas de preflight CORS
   });
+  if (!res.ok) throw new Error("HTTP " + res.status);
   return res.json();
 }
 
-// Load from server — skipped if a save is in flight to avoid overwriting local state
-async function loadAll(force) {
-  if (saving && !force) return;
-  setSyncing(true);
-  try {
-    const [r1, r2] = await Promise.all([api("getList",{}), api("getFavs",{})]);
-    // Only update if no save happened while we were fetching
-    if (!saving || force) {
-      if (r1 && r1.items) items = r1.items;
-      if (r2 && r2.favs && r2.favs.length) favs = r2.favs;
-    }
-  } catch(e) { console.error(e); }
-  setSyncing(false);
+function applyServer(s) {
+  if (Array.isArray(s.items)) {
+    items = s.items.map(i => ({ ...i, category: normCat(i.category) }));
+  }
+  if (Array.isArray(s.favs)) {
+    favs = s.favs.map(f => ({ ...f, category: normCat(f.category) }));
+    favsInit = true;
+  } else if (s.favs === null) {
+    favsInit = false;
+    ensureFavsInit();       // premier lancement : on envoie les favoris par défaut
+  }
+  persist();
   render();
 }
 
-// Save list — batches rapid successive calls, sends only the latest snapshot
-async function pushList() {
-  pendingListSave = JSON.parse(JSON.stringify(items)); // snapshot
-  if (saving) return; // a save loop is already running
-  saving = true;
-  setSyncing(true);
-  while (pendingListSave) {
-    const snapshot = pendingListSave;
-    pendingListSave = null;
-    try { await api("saveList", { items: snapshot }); } catch(e) { console.error(e); }
+// Envoie les modifications une par une, dans l'ordre. En cas de coupure,
+// elles restent en file (et dans le cache) et repartent automatiquement.
+async function flush() {
+  if (!configured || sending || !queue.length) return;
+  sending = true; updateSync();
+  while (queue.length) {
+    let res;
+    try {
+      res = await api(queue[0]);
+    } catch (e) {
+      if (e.fatal) {                 // requête refusée : inutile de réessayer
+        console.warn("Opération ignorée :", e.message, queue[0]);
+        queue.shift(); persist();
+        continue;
+      }
+      console.error(e);
+      netError = true; sending = false; updateSync();
+      scheduleRetry();
+      return;
+    }
+    queue.shift(); netError = false; persist();
+    if (!queue.length) applyServer(res);   // état serveur fiable : plus rien en attente
   }
-  saving = false;
-  setSyncing(false);
+  sending = false; updateSync();
 }
 
-async function pushFavs() {
-  pendingFavsSave = JSON.parse(JSON.stringify(favs));
-  if (saving) return;
-  saving = true;
-  setSyncing(true);
-  while (pendingFavsSave) {
-    const snapshot = pendingFavsSave;
-    pendingFavsSave = null;
-    try { await api("saveFavs", { favs: snapshot }); } catch(e) { console.error(e); }
-  }
-  saving = false;
-  setSyncing(false);
+function scheduleRetry() {
+  clearTimeout(retryTimer);
+  retryTimer = setTimeout(flush, 5000);
 }
 
-// ─── SYNC STATE ───────────────────────────────────────────────────────────────
-function setSyncing(on) {
-  syncing = on;
-  const dot = document.getElementById("sync-dot");
-  const lbl = document.getElementById("sync-label");
-  dot.className = "sync-dot" + (on ? " syncing" : "");
-  lbl.textContent = on ? "Synchro…" : "Synchronisé";
+async function poll() {
+  if (!configured || document.hidden || sending || polling || queue.length) return;
+  polling = true; updateSync();
+  const rev = localRev;
+  try {
+    const res = await api({ action: "getAll" });
+    netError = false;
+    // Une modification locale a eu lieu pendant la requête : réponse périmée
+    if (rev === localRev && !queue.length) applyServer(res);
+  } catch (e) {
+    console.error(e);
+    netError = true;
+  }
+  polling = false; updateSync();
+}
+
+// Applique tout de suite en local, puis met l'opération en file d'envoi
+function mutate(op, applyLocal) {
+  applyLocal();
+  localRev++;
+  queue.push(op);
+  persist();
+  render();
+  flush();
+}
+
+function ensureFavsInit() {
+  if (favsInit) return;
+  favsInit = true;
+  // push (pas unshift) : queue[0] est peut-être en cours d'envoi
+  queue.push({ action: "initFavs", favs: favs.map(f => ({ ...f })) });
+  persist();
+  flush();
+}
+
+// ─── SYNC STATE ──────────────────────────────────────────────────────────────
+function updateSync() {
+  const wrap = document.getElementById("sync-wrap");
+  const dot  = document.getElementById("sync-dot");
+  const lbl  = document.getElementById("sync-label");
+  const pending = queue.length;
+  let state = "ok", text = "Synchronisé";
+  if (!configured)            { state = "error";   text = "URL non configurée"; }
+  else if (netError)          { state = "error";   text = "Hors ligne" + (pending ? ` · ${pending} en attente` : ""); }
+  else if (sending || polling){ state = "syncing"; text = "Synchro…"; }
+  dot.className  = "sync-dot" + (state === "ok" ? "" : " " + state);
+  wrap.className = "sync" + (state === "error" ? " error" : "");
+  lbl.textContent = text;
 }
 
 // ─── ACTIONS ─────────────────────────────────────────────────────────────────
@@ -470,252 +410,205 @@ function addItem() {
   const input = document.getElementById("item-input");
   const name = input.value.trim();
   if (!name) return;
-  items.push({ id: uid(), name, category: selCat, checked: false, addedAt: new Date().toISOString() });
+  const item = { id: uid(), name, category: selCat, checked: false, addedAt: new Date().toISOString() };
+  mutate({ action: "add", item }, () => items.push(item));
   input.value = "";
-  render();
-  pushList();
   input.focus();
 }
 
 function quickAdd(name, cat) {
   const exists = items.some(i => i.name.toLowerCase() === name.toLowerCase() && !i.checked);
   if (exists) return;
-  items.push({ id: uid(), name, category: cat, checked: false, addedAt: new Date().toISOString() });
-  render();
-  pushList();
+  const item = { id: uid(), name, category: cat, checked: false, addedAt: new Date().toISOString() };
+  mutate({ action: "add", item }, () => items.push(item));
 }
 
 function toggleItem(id) {
   const item = items.find(i => i.id === id);
-  if (item) item.checked = !item.checked;
-  render();
-  pushList();
+  if (!item) return;
+  const checked = !item.checked;
+  mutate({ action: "setChecked", id, checked }, () => { item.checked = checked; });
 }
 
 function removeItem(id) {
-  items = items.filter(i => i.id !== id);
-  render();
-  pushList();
+  mutate({ action: "remove", id }, () => { items = items.filter(i => i.id !== id); });
 }
 
 function clearChecked() {
-  items = items.filter(i => !i.checked);
-  render();
-  pushList();
+  const ids = items.filter(i => i.checked).map(i => i.id);
+  if (!ids.length) return;
+  mutate({ action: "clearChecked", ids }, () => { items = items.filter(i => !i.checked); });
 }
 
 function addFav(e) {
   e.preventDefault();
   const nameEl = document.getElementById("new-fav-name");
   const catEl  = document.getElementById("new-fav-cat");
-  if (!nameEl.value.trim()) return;
-  favs.push({ name: nameEl.value.trim(), category: catEl.value });
+  const fav = { name: nameEl.value.trim(), category: catEl.value };
+  if (!fav.name) return;
   nameEl.value = "";
-  renderQuick();
-  pushFavs();
+  if (favs.some(f => favKey(f) === favKey(fav))) return;
+  ensureFavsInit();
+  mutate({ action: "addFav", fav }, () => favs.push(fav));
 }
 
 function removeFav(idx) {
-  favs.splice(idx, 1);
-  renderQuick();
-  pushFavs();
+  const fav = favs[idx];
+  if (!fav) return;
+  ensureFavsInit();
+  mutate({ action: "removeFav", fav: { ...fav } }, () => { favs.splice(idx, 1); });
 }
 
 function toggleQuick() {
   quickOpen = !quickOpen;
-  document.getElementById("quick-panel").className = "quick-panel" + (quickOpen ? " open" : "");
-  document.getElementById("quick-arrow").className  = "arrow" + (quickOpen ? " open" : "");
+  document.getElementById("quick-panel").classList.toggle("open", quickOpen);
+  document.getElementById("quick-toggle").setAttribute("aria-expanded", quickOpen);
+  document.getElementById("quick-arrow").classList.toggle("open", quickOpen);
 }
 
 function toggleEditFavs() {
   editFavs = !editFavs;
-  document.getElementById("edit-fav-btn").textContent = editFavs ? "✓ Terminer" : "✏️ Modifier les favoris";
-  document.getElementById("new-fav-form").style.display = editFavs ? "flex" : "none";
+  document.getElementById("edit-fav-btn").textContent = editFavs ? "Terminer" : "Modifier les favoris";
+  document.getElementById("new-fav-form").style.display = editFavs ? "grid" : "none";
+  document.getElementById("edit-hint").style.display = editFavs ? "" : "none";
+  document.getElementById("quick-panel").classList.toggle("editing", editFavs);
   renderQuickChips();
 }
 
 function selectCat(id) {
-  selCat = id;
-  document.getElementById("cat-picker-overlay").classList.remove("open");
+  selCat = normCat(id);
   renderCatPills();
-
-  // If triggered from add flow, complete the add
-  const input = document.getElementById("item-input");
-  const pending = input.dataset.pending;
-  if (pending) {
-    delete input.dataset.pending;
-    input.value = "";
-    items.push({ id: uid(), name: pending, category: selCat, checked: false, addedAt: new Date().toISOString() });
-    render();
-    pushList();
-    input.focus();
-  }
 }
 
-// ─── RENDER ───────────────────────────────────────────────────────────────────
+// ─── RENDER ──────────────────────────────────────────────────────────────────
 function render() {
   renderCatPills();
   renderList();
-  renderQuick();
+  renderQuickChips();
   renderCounts();
-  // Show category selector row
-  const row = document.getElementById("selected-cat-row");
-  if (row) row.style.display = "flex";
 }
 
 function renderCounts() {
   const total   = items.length;
   const checked = items.filter(i => i.checked).length;
+  const left    = total - checked;
   const pct     = total > 0 ? Math.round((checked / total) * 100) : 0;
 
-  document.getElementById("stat-total").textContent = total;
+  document.getElementById("stat-left").textContent = left;
+  document.getElementById("stat-cap").textContent =
+    total === 0 ? "La liste est vide"
+    : plural(left, "article") + " à acheter" + (checked ? ", " + checked + " " + plural(checked, "fait") + " sur " + total : "");
   document.getElementById("progress-fill").style.width = pct + "%";
 
-  const doneWrap = document.getElementById("stat-done-wrap");
+  const clearBtn = document.getElementById("clear-btn");
   if (checked > 0) {
-    document.getElementById("stat-done").textContent = checked;
-    doneWrap.style.display = "";
-    document.getElementById("clear-btn").style.display = "";
-    document.getElementById("clear-btn").textContent = "Effacer " + checked + " fait" + (checked !== 1 ? "s" : "");
+    clearBtn.style.display = "";
+    clearBtn.textContent = "Effacer " + checked + " " + plural(checked, "fait");
   } else {
-    doneWrap.style.display = "none";
-    document.getElementById("clear-btn").style.display = "none";
+    clearBtn.style.display = "none";
   }
 }
 
 function renderCatPills() {
-  // Update selected category row
-  const cat = getCat(selCat);
-  const dot = document.getElementById("selected-cat-dot");
-  const lbl = document.getElementById("selected-cat-label");
-  if (dot) dot.style.background = cat.color;
-  if (lbl) lbl.textContent = cat.emoji + " " + cat.label;
-
-  // Build picker list
-  const list = document.getElementById("cat-picker-list");
-  if (list) {
-    list.innerHTML = CATEGORIES.map(c => `
-      <button class="cat-picker-item" onclick="selectCat('${c.id}')">
-        <span class="cat-picker-dot" style="background:${c.color}"></span>
-        <span class="cat-picker-label">${c.emoji} ${c.label}</span>
-        ${selCat === c.id ? '<span style="margin-left:auto;color:var(--accent);font-size:14px">✓</span>' : ''}
-      </button>
-    `).join("");
-  }
-}
-
-function openCatPicker() {
-  document.getElementById("cat-picker-overlay").classList.add("open");
-  renderCatPills();
-}
-
-function closeCatPicker(e) {
-  if (e.target === document.getElementById("cat-picker-overlay")) {
-    document.getElementById("cat-picker-overlay").classList.remove("open");
-  }
-}
-
-function handleAdd() {
-  const input = document.getElementById("item-input");
-  const name = input.value.trim();
-  if (!name) return;
-  // Show category picker first
-  renderCatPills();
-  document.getElementById("cat-picker-overlay").classList.add("open");
-  // Store pending name
-  input.dataset.pending = name;
+  document.getElementById("cat-pills").innerHTML = CATEGORIES.map(c =>
+    `<button class="chip" data-act="cat" data-cat="${c.id}" aria-pressed="${selCat === c.id}">${esc(c.label)}</button>`
+  ).join("");
 }
 
 function renderList() {
   const area = document.getElementById("list-area");
   const grouped = CATEGORIES.map(cat => ({
-    cat, rows: items.filter(i => i.category === cat.id)
+    cat, rows: items.filter(i => normCat(i.category) === cat.id)
   })).filter(g => g.rows.length > 0);
 
   if (grouped.length === 0) {
-    area.innerHTML = `<div class="empty"><span class="e-icon">🛒</span>La liste est vide — ajoutez quelque chose !</div>`;
+    area.innerHTML = `<h2>La liste</h2><div class="card empty">Rien à acheter pour l'instant. Ajoutez un article ou piochez dans vos favoris.</div>`;
     return;
   }
 
   area.innerHTML = grouped.map(({ cat, rows }) => `
-    <div>
-      <div class="cat-header">
-        <div class="cat-dot" style="background:${cat.color}"></div>
-        <span class="cat-header-label">${cat.emoji} ${cat.label}</span>
-        <span class="cat-count">${rows.filter(r=>!r.checked).length}/${rows.length}</span>
-      </div>
+    <h2><span>${esc(cat.label)}</span><span class="count">${rows.filter(r => !r.checked).length} / ${rows.length}</span></h2>
+    <ul class="card list">
       ${rows.map(item => `
-        <div class="item-row">
-          <button class="chk ${item.checked ? "done" : ""}"
-            style="${item.checked ? `background:${cat.color};border-color:${cat.color}` : `border-color:#333`}"
-            onclick="toggleItem('${item.id}')">${item.checked ? "✓" : ""}</button>
-          <span class="item-name ${item.checked ? "done" : ""}">${item.name}</span>
-          <button class="del" onclick="removeItem('${item.id}')">×</button>
-        </div>
+        <li class="item-row">
+          <button class="chk ${item.checked ? "done" : ""}" data-act="toggle" data-id="${esc(item.id)}"
+            aria-label="${item.checked ? "Décocher" : "Cocher"} ${esc(item.name)}">${item.checked ? "✓" : ""}</button>
+          <span class="item-name ${item.checked ? "done" : ""}">${esc(item.name)}</span>
+          <button class="del" data-act="del" data-id="${esc(item.id)}" aria-label="Supprimer ${esc(item.name)}">×</button>
+        </li>
       `).join("")}
-    </div>
+    </ul>
   `).join("");
-}
-
-function renderQuick() {
-  renderQuickChips();
-  const formDisplay = editFavs ? "flex" : "none";
-  const formEl = document.getElementById("new-fav-form");
-  if (formEl) formEl.style.display = formDisplay;
 }
 
 function renderQuickChips() {
   const inList = new Set(items.filter(i => !i.checked).map(i => i.name.toLowerCase()));
-  const inner  = document.getElementById("quick-inner");
-
-  const sections = CATEGORIES.map(cat => {
-    const catFavs = favs.filter(f => f.category === cat.id);
-    if (!catFavs.length) return "";
-    const chips = catFavs.map((fav, i) => {
-      const already = inList.has(fav.name.toLowerCase());
-      const globalIdx = favs.indexOf(fav);
-      return `<button class="fav-chip ${already ? "in-list" : ""}"
-        style="border-color:${cat.color};color:${cat.color}"
-        onclick="${already ? "" : `quickAdd('${fav.name.replace(/'/g,"\\'")}','${fav.category}')`}">
-        ${fav.name}${editFavs ? `<span class="fav-del" onclick="event.stopPropagation();removeFav(${globalIdx})">×</span>` : ""}
-      </button>`;
-    }).join("");
+  document.getElementById("quick-chips").innerHTML = CATEGORIES.map(cat => {
+    const chips = favs
+      .map((fav, idx) => ({ fav, idx }))
+      .filter(({ fav }) => normCat(fav.category) === cat.id)
+      .map(({ fav, idx }) => {
+        const already = !editFavs && inList.has(fav.name.toLowerCase());
+        return `<button class="fav-chip ${already ? "in-list" : ""}" data-act="fav" data-idx="${idx}"
+          ${editFavs ? `aria-label="Supprimer le favori ${esc(fav.name)}"` : ""}>${esc(fav.name)}${editFavs ? `<span class="fav-del">×</span>` : ""}</button>`;
+      }).join("");
+    if (!chips) return "";
     return `<div class="quick-section">
-      <div class="quick-section-label" style="color:${cat.color}">${cat.emoji} ${cat.label}</div>
-      <div class="quick-chips">${chips}</div>
+      <div class="quick-label">${esc(cat.label)}</div>
+      <div class="fav-wrap">${chips}</div>
     </div>`;
   }).join("");
-
-  inner.innerHTML = sections + `
-    <div class="edit-row">
-      <button class="edit-btn" id="edit-fav-btn" onclick="toggleEditFavs()">${editFavs ? "✓ Terminer" : "✏️ Modifier les favoris"}</button>
-    </div>
-    <form id="new-fav-form" style="display:${editFavs ? "flex" : "none"};gap:6px;margin-top:10px;flex-wrap:wrap" onsubmit="addFav(event)">
-      <input id="new-fav-name" class="new-fav-input" placeholder="Nouveau favori…">
-      <select id="new-fav-cat" class="new-fav-sel">
-        ${CATEGORIES.map(c => `<option value="${c.id}">${c.emoji} ${c.label}</option>`).join("")}
-      </select>
-      <button type="submit" class="new-fav-add">Ajouter</button>
-    </form>
-  `;
 }
 
-// ─── KEYBOARD ─────────────────────────────────────────────────────────────────
-document.getElementById("item-input").addEventListener("keydown", e => {
-  if (e.key === "Enter") handleAdd();
+// ─── EVENTS (un seul écouteur, aucune donnée dans des onclick) ────────────────
+document.addEventListener("click", e => {
+  const el = e.target.closest("[data-act]");
+  if (!el) return;
+  switch (el.dataset.act) {
+    case "add":       addItem(); break;
+    case "cat":       selectCat(el.dataset.cat); break;
+    case "toggle":    toggleItem(el.dataset.id); break;
+    case "del":       removeItem(el.dataset.id); break;
+    case "clear":     clearChecked(); break;
+    case "quick":     toggleQuick(); break;
+    case "edit-favs": toggleEditFavs(); break;
+    case "fav": {
+      const idx = Number(el.dataset.idx);
+      const fav = favs[idx];
+      if (!fav) break;
+      if (editFavs) removeFav(idx);
+      else if (!el.classList.contains("in-list")) quickAdd(fav.name, normCat(fav.category));
+      break;
+    }
+  }
 });
 
-// ─── INIT ─────────────────────────────────────────────────────────────────────
-loadAll();
-pollTimer = setInterval(loadAll, 20000);
+document.getElementById("item-input").addEventListener("keydown", e => {
+  if (e.key === "Enter") addItem();
+});
+document.getElementById("new-fav-form").addEventListener("submit", addFav);
 
-// Show install prompt if not already in standalone mode
-if (!window.navigator.standalone) {
-  const banner = document.getElementById("install-banner");
-  if (banner) banner.style.display = "block";
-}
+// Pause quand l'app est en arrière-plan, rafraîchit au retour
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) { flush(); poll(); }
+});
+window.addEventListener("online", () => { flush(); poll(); });
 
+// ─── INIT ────────────────────────────────────────────────────────────────────
+document.getElementById("new-fav-cat").innerHTML =
+  CATEGORIES.map(c => `<option value="${c.id}">${esc(c.label)}</option>`).join("");
 
+restore();
+render();
+updateSync();
+flush();
+poll();
+setInterval(poll, POLL_MS);
+
+// Bannière d'installation : navigateur mobile, pas déjà installé
+const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+const isTouch = window.matchMedia("(hover: none)").matches;
+if (!isStandalone && isTouch) document.getElementById("install-banner").style.display = "block";
 </script>
 </body>
 </html>
